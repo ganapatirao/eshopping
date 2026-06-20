@@ -17,6 +17,7 @@ public class SeedData
     {
         await SeedCategories();
         await SeedProducts();
+        await SeedUsers();
         await SeedHeader();
         await SeedFooter();
         await SeedAdvertisements();
@@ -71,6 +72,171 @@ public class SeedData
         await _context.Products.InsertManyAsync(products);
     }
 
+    private async Task SeedUsers()
+    {
+        var existingUsers = await _context.Users.CountDocumentsAsync(FilterDefinition<User>.Empty);
+        if (existingUsers > 0) return;
+
+        var users = new List<User>
+        {
+            new User
+            {
+                Id = "user1",
+                FullName = "Admin User",
+                Email = "admin@eshop.com",
+                PhoneNumber = "+1234567890",
+                Address = "123 Admin Street",
+                City = "New York",
+                State = "NY",
+                ZipCode = "10001",
+                Role = "Admin",
+                IsActive = true,
+                CreatedAt = DateTime.UtcNow.AddDays(-30),
+                LastLoginAt = DateTime.UtcNow
+            },
+            new User
+            {
+                Id = "user2",
+                FullName = "John Doe",
+                Email = "john.doe@example.com",
+                PhoneNumber = "+1234567891",
+                Address = "456 Oak Avenue",
+                City = "Los Angeles",
+                State = "CA",
+                ZipCode = "90001",
+                Role = "Customer",
+                IsActive = true,
+                CreatedAt = DateTime.UtcNow.AddDays(-15),
+                LastLoginAt = DateTime.UtcNow.AddDays(-1)
+            },
+            new User
+            {
+                Id = "user3",
+                FullName = "Jane Smith",
+                Email = "jane.smith@example.com",
+                PhoneNumber = "+1234567892",
+                Address = "789 Pine Road",
+                City = "Chicago",
+                State = "IL",
+                ZipCode = "60601",
+                Role = "Customer",
+                IsActive = true,
+                CreatedAt = DateTime.UtcNow.AddDays(-10),
+                LastLoginAt = DateTime.UtcNow.AddDays(-2)
+            },
+            new User
+            {
+                Id = "user4",
+                FullName = "Bob Johnson",
+                Email = "bob.johnson@example.com",
+                PhoneNumber = "+1234567893",
+                Address = "321 Elm Street",
+                City = "Houston",
+                State = "TX",
+                ZipCode = "77001",
+                Role = "Customer",
+                IsActive = false,
+                CreatedAt = DateTime.UtcNow.AddDays(-5),
+                LastLoginAt = DateTime.UtcNow.AddDays(-3)
+            },
+            new User
+            {
+                Id = "user5",
+                FullName = "Alice Williams",
+                Email = "alice.williams@example.com",
+                PhoneNumber = "+1234567894",
+                Address = "654 Maple Drive",
+                City = "Phoenix",
+                State = "AZ",
+                ZipCode = "85001",
+                Role = "Customer",
+                IsActive = true,
+                CreatedAt = DateTime.UtcNow.AddDays(-7),
+                LastLoginAt = DateTime.UtcNow.AddDays(-1)
+            },
+            new User
+            {
+                Id = "user6",
+                FullName = "Marketing Manager",
+                Email = "marketing@eshop.com",
+                PhoneNumber = "+1234567895",
+                Address = "999 Marketing Blvd",
+                City = "San Francisco",
+                State = "CA",
+                ZipCode = "94102",
+                Role = "Advertiser",
+                IsActive = true,
+                CreatedAt = DateTime.UtcNow.AddDays(-20),
+                LastLoginAt = DateTime.UtcNow
+            },
+            new User
+            {
+                Id = "user7",
+                FullName = "Brand Manager",
+                Email = "brand@eshop.com",
+                PhoneNumber = "+1234567896",
+                Address = "888 Brand Avenue",
+                City = "Seattle",
+                State = "WA",
+                ZipCode = "98101",
+                Role = "Advertiser",
+                IsActive = true,
+                CreatedAt = DateTime.UtcNow.AddDays(-12),
+                LastLoginAt = DateTime.UtcNow.AddDays(-1)
+            },
+            new User
+            {
+                Id = "user8",
+                FullName = "Content Creator",
+                Email = "content@eshop.com",
+                PhoneNumber = "+1234567897",
+                Address = "777 Creative Lane",
+                City = "Austin",
+                State = "TX",
+                ZipCode = "78701",
+                Role = "Other",
+                CustomRole = "Content Creator",
+                IsActive = true,
+                CreatedAt = DateTime.UtcNow.AddDays(-8),
+                LastLoginAt = DateTime.UtcNow.AddDays(-2)
+            },
+            new User
+            {
+                Id = "user9",
+                FullName = "Support Lead",
+                Email = "support@eshop.com",
+                PhoneNumber = "+1234567898",
+                Address = "666 Support Street",
+                City = "Denver",
+                State = "CO",
+                ZipCode = "80201",
+                Role = "Other",
+                CustomRole = "Support Lead",
+                IsActive = true,
+                CreatedAt = DateTime.UtcNow.AddDays(-25),
+                LastLoginAt = DateTime.UtcNow
+            },
+            new User
+            {
+                Id = "user10",
+                FullName = "Warehouse Manager",
+                Email = "warehouse@eshop.com",
+                PhoneNumber = "+1234567899",
+                Address = "555 Warehouse Road",
+                City = "Miami",
+                State = "FL",
+                ZipCode = "33101",
+                Role = "Other",
+                CustomRole = "Warehouse Manager",
+                IsActive = true,
+                CreatedAt = DateTime.UtcNow.AddDays(-18),
+                LastLoginAt = DateTime.UtcNow.AddDays(-1)
+            }
+        };
+
+        await _context.Users.InsertManyAsync(users);
+    }
+
     private async Task SeedHeader()
     {
         var existingHeaders = await _context.Headers.CountDocumentsAsync(FilterDefinition<Header>.Empty);
@@ -104,8 +270,7 @@ public class SeedData
 
     private async Task SeedFooter()
     {
-        var existingFooters = await _context.Footers.CountDocumentsAsync(FilterDefinition<Footer>.Empty);
-        if (existingFooters > 0) return;
+        await _context.Footers.DeleteManyAsync(FilterDefinition<Footer>.Empty);
 
         var footer = new Footer
         {
@@ -113,7 +278,24 @@ public class SeedData
             CompanyName = "E-Shop Inc.",
             Description = "Your one-stop shop for everything",
             CopyrightText = "© 2024 E-Shop Inc. All rights reserved.",
-            SocialLinks = new List<string> { "https://facebook.com/eshop", "https://twitter.com/eshop", "https://instagram.com/eshop" },
+            SocialLinks = new List<SocialMediaLink>
+            {
+                new SocialMediaLink { Id = "social1", Name = "Facebook", Url = "https://facebook.com/eshop", DisplayOrder = 1, IsActive = true },
+                new SocialMediaLink { Id = "social2", Name = "Twitter", Url = "https://twitter.com/eshop", DisplayOrder = 2, IsActive = true },
+                new SocialMediaLink { Id = "social3", Name = "Instagram", Url = "https://instagram.com/eshop", DisplayOrder = 3, IsActive = true },
+                new SocialMediaLink { Id = "social4", Name = "LinkedIn", Url = "https://linkedin.com/company/eshop", DisplayOrder = 4, IsActive = true }
+            },
+            ContactInfo = new ContactInfo
+            {
+                Id = "contact1",
+                Email = "contact@eshop.com",
+                Phone = "+1 234 567 890",
+                Address = "123 Main Street",
+                City = "New York",
+                State = "NY",
+                ZipCode = "10001",
+                Country = "USA"
+            },
             Sections = new List<FooterSection>
             {
                 new FooterSection

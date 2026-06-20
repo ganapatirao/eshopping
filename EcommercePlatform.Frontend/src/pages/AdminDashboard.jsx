@@ -15,8 +15,10 @@ import {
   Layout,
   Database,
   Settings,
+  AlertCircle,
+  CheckCircle,
 } from 'lucide-react';
-import { productsAPI, categoriesAPI, ordersAPI, layoutAPI, seedAPI, imageAPI } from '../services/api';
+import { productsAPI, categoriesAPI, ordersAPI, layoutAPI, seedAPI, imageAPI, usersAPI } from '../services/api';
 import { useAuth } from '../context/AuthContext';
 import { formatPrice } from '../utils/format';
 
@@ -70,6 +72,14 @@ const AdminDashboard = () => {
   const [deleteModal, setDeleteModal] = useState({ open: false, item: null, type: null, onConfirm: null });
   const [footerSectionModal, setFooterSectionModal] = useState({ open: false, data: null, index: null });
   const [footerLinkModal, setFooterLinkModal] = useState({ open: false, data: null, sectionIndex: null, linkIndex: null });
+  const [productImagePreview, setProductImagePreview] = useState(null);
+  const [categoryImagePreview, setCategoryImagePreview] = useState(null);
+  const [users, setUsers] = useState([]);
+  const [userModal, setUserModal] = useState({ open: false, data: null });
+  const [searchTerm, setSearchTerm] = useState('');
+  const [filterStatus, setFilterStatus] = useState('all');
+  const [filterRole, setFilterRole] = useState('all');
+  const [confirmModal, setConfirmModal] = useState({ open: false, title: '', message: '', onConfirm: null });
 
   useEffect(() => {
     if (!user) {
@@ -86,12 +96,13 @@ const AdminDashboard = () => {
   const loadAll = async () => {
     setLoading(true);
     try {
-      const [p, c, o, h, f] = await Promise.all([
+      const [p, c, o, h, f, u] = await Promise.all([
         productsAPI.getAllAdmin(),
         categoriesAPI.getAllAdmin(),
         ordersAPI.getAll(),
         layoutAPI.getHeader(),
         layoutAPI.getFooter(),
+        usersAPI.getAll(),
       ]);
       setProducts(p.data);
       setCategories(c.data);
@@ -99,6 +110,7 @@ const AdminDashboard = () => {
       setHeaderData(h.data);
       setFooterData(f.data);
       setLogoPreview(h.data?.logoUrl || null);
+      setUsers(u.data);
     } catch (err) {
       console.error('Error loading admin data:', err);
     } finally {
@@ -116,6 +128,7 @@ const AdminDashboard = () => {
   const openProduct = (data) => {
     setForm(data ? { ...emptyProduct, ...data } : { ...emptyProduct });
     setProductModal({ open: true, data });
+    setProductImagePreview(data?.imageUrl || null);
   };
 
   const saveProduct = async (e) => {
@@ -146,15 +159,23 @@ const AdminDashboard = () => {
   };
 
   const deleteProduct = async (id) => {
-    if (!confirm('Delete this product?')) return;
-    await productsAPI.remove(id);
-    loadAll();
+    setConfirmModal({
+      open: true,
+      title: 'Delete Product',
+      message: 'Are you sure you want to delete this product? This action cannot be undone.',
+      onConfirm: async () => {
+        await productsAPI.remove(id);
+        loadAll();
+        setConfirmModal({ open: false, title: '', message: '', onConfirm: null });
+      }
+    });
   };
 
   // ---- Category CRUD ----
   const openCategory = (data) => {
     setForm(data ? { ...emptyCategory, ...data } : { ...emptyCategory });
     setCategoryModal({ open: true, data });
+    setCategoryImagePreview(data?.imageUrl || null);
   };
 
   const saveCategory = async (e) => {
@@ -178,10 +199,151 @@ const AdminDashboard = () => {
   };
 
   const deleteCategory = async (id) => {
-    if (!confirm('Delete this category?')) return;
-    await categoriesAPI.remove(id);
-    loadAll();
+    setConfirmModal({
+      open: true,
+      title: 'Delete Category',
+      message: 'Are you sure you want to delete this category? This action cannot be undone.',
+      onConfirm: async () => {
+        await categoriesAPI.remove(id);
+        loadAll();
+        setConfirmModal({ open: false, title: '', message: '', onConfirm: null });
+      }
+    });
   };
+
+  const handleProductImageUpload = (e) => {
+    const file = e.target.files[0];
+    if (file) {
+      console.log('Uploading product image file:', file.name, file.type, file.size);
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        const base64 = reader.result;
+        setProductImagePreview(base64);
+        setForm({ ...form, imageUrl: base64 });
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+
+  const handleProductImageDrop = (e) => {
+    e.preventDefault();
+    const file = e.dataTransfer.files[0];
+    if (file && file.type.startsWith('image/')) {
+      console.log('Dropping product image file:', file.name, file.type, file.size);
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        const base64 = reader.result;
+        setProductImagePreview(base64);
+        setForm({ ...form, imageUrl: base64 });
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+
+  const handleCategoryImageUpload = (e) => {
+    const file = e.target.files[0];
+    if (file) {
+      console.log('Uploading category image file:', file.name, file.type, file.size);
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        const base64 = reader.result;
+        setCategoryImagePreview(base64);
+        setForm({ ...form, imageUrl: base64 });
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+
+  const handleCategoryImageDrop = (e) => {
+    e.preventDefault();
+    const file = e.dataTransfer.files[0];
+    if (file && file.type.startsWith('image/')) {
+      console.log('Dropping category image file:', file.name, file.type, file.size);
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        const base64 = reader.result;
+        setCategoryImagePreview(base64);
+        setForm({ ...form, imageUrl: base64 });
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+
+  // ---- User CRUD ----
+  const openUser = (data) => {
+    setUserModal({ open: true, data });
+  };
+
+  const saveUser = async (e) => {
+    e.preventDefault();
+    setSaving(true);
+    try {
+      if (userModal.data?.id) {
+        await usersAPI.update(userModal.data.id, userModal.data);
+      } else {
+        await usersAPI.create(userModal.data);
+      }
+      setUserModal({ open: false, data: null });
+      loadAll();
+    } catch (err) {
+      console.error(err);
+      alert('Error saving user');
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const toggleUserActive = async (id) => {
+    try {
+      await usersAPI.toggleActive(id);
+      setUsers((prev) => prev.map((u) => (u.id === id ? { ...u, isActive: !u.isActive } : u)));
+    } catch (err) {
+      console.error(err);
+      alert('Error toggling user status');
+    }
+  };
+
+  const deleteUser = async (id) => {
+    setConfirmModal({
+      open: true,
+      title: 'Delete User',
+      message: 'Are you sure you want to delete this user? This action cannot be undone.',
+      onConfirm: async () => {
+        await usersAPI.remove(id);
+        loadAll();
+        setConfirmModal({ open: false, title: '', message: '', onConfirm: null });
+      }
+    });
+  };
+
+  // Filter handlers
+  const filteredProducts = products.filter(p => 
+    p.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    p.description?.toLowerCase().includes(searchTerm.toLowerCase())
+  );
+
+  const filteredCategories = categories.filter(c => 
+    c.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    c.description?.toLowerCase().includes(searchTerm.toLowerCase())
+  );
+
+  const filteredOrders = orders.filter(o => 
+    o.customerName?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    o.email?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    o.status?.toLowerCase().includes(searchTerm.toLowerCase())
+  );
+
+  const filteredUsers = users.filter(u => {
+    const matchesSearch = 
+      u.fullName?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      u.email?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      u.phoneNumber?.toLowerCase().includes(searchTerm.toLowerCase());
+    const matchesStatus = filterStatus === 'all' || 
+      (filterStatus === 'active' && u.isActive) || 
+      (filterStatus === 'inactive' && !u.isActive);
+    const matchesRole = filterRole === 'all' || u.role === filterRole;
+    return matchesSearch && matchesStatus && matchesRole;
+  });
 
   const updateOrderStatus = async (id, status) => {
     try {
@@ -194,18 +356,25 @@ const AdminDashboard = () => {
   };
 
   const handleSeedDatabase = async () => {
-    if (!confirm('This will seed the database with sample data. Continue?')) return;
-    setSeeding(true);
-    try {
-      await seedAPI.seedDatabase();
-      alert('Database seeded successfully!');
-      loadAll();
-    } catch (err) {
-      console.error(err);
-      alert('Error seeding database');
-    } finally {
-      setSeeding(false);
-    }
+    setConfirmModal({
+      open: true,
+      title: 'Seed Database',
+      message: 'This will seed the database with sample data. This may overwrite existing data. Continue?',
+      onConfirm: async () => {
+        setSeeding(true);
+        setConfirmModal({ open: false, title: '', message: '', onConfirm: null });
+        try {
+          await seedAPI.seedDatabase();
+          alert('Database seeded successfully!');
+          loadAll();
+        } catch (err) {
+          console.error(err);
+          alert('Error seeding database');
+        } finally {
+          setSeeding(false);
+        }
+      }
+    });
   };
 
   const handleSaveHeader = async () => {
@@ -324,113 +493,61 @@ const AdminDashboard = () => {
     });
   };
 
-  const handleSubMenuIconUpload = async (e) => {
+  const handleSubMenuIconUpload = (e) => {
     const file = e.target.files[0];
     if (file) {
-      try {
-        console.log('Uploading submenu icon file:', file.name, file.type, file.size);
-        const res = await imageAPI.upload(file);
-        console.log('Upload response:', res);
-        const imageId = res.data;
-        const imageUrl = imageAPI.getUrl(imageId);
-        console.log('Image URL:', imageUrl);
-        setSubMenuIconPreview(imageUrl);
-        setSubMenuModal({ ...subMenuModal, data: { ...subMenuModal.data, icon: imageId, iconType: 'binary' } });
-      } catch (err) {
-        console.error('Error uploading icon:', err);
-        // Fallback to base64 if upload fails
-        console.log('Falling back to base64 encoding');
-        const reader = new FileReader();
-        reader.onloadend = () => {
-          const base64 = reader.result;
-          setSubMenuIconPreview(base64);
-          setSubMenuModal({ ...subMenuModal, data: { ...subMenuModal.data, icon: base64, iconType: 'base64' } });
-        };
-        reader.readAsDataURL(file);
-      }
+      console.log('Uploading submenu icon file:', file.name, file.type, file.size);
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        const base64 = reader.result;
+        setSubMenuIconPreview(base64);
+        setSubMenuModal({ ...subMenuModal, data: { ...subMenuModal.data, icon: base64, iconType: 'base64' } });
+      };
+      reader.readAsDataURL(file);
     }
   };
 
-  const handleSubMenuIconDrop = async (e) => {
+  const handleSubMenuIconDrop = (e) => {
     e.preventDefault();
     const file = e.dataTransfer.files[0];
     if (file && file.type.startsWith('image/')) {
-      try {
-        console.log('Dropping submenu icon file:', file.name, file.type, file.size);
-        const res = await imageAPI.upload(file);
-        console.log('Upload response:', res);
-        const imageId = res.data;
-        const imageUrl = imageAPI.getUrl(imageId);
-        console.log('Image URL:', imageUrl);
-        setSubMenuIconPreview(imageUrl);
-        setSubMenuModal({ ...subMenuModal, data: { ...subMenuModal.data, icon: imageId, iconType: 'binary' } });
-      } catch (err) {
-        console.error('Error uploading icon:', err);
-        // Fallback to base64 if upload fails
-        console.log('Falling back to base64 encoding');
-        const reader = new FileReader();
-        reader.onloadend = () => {
-          const base64 = reader.result;
-          setSubMenuIconPreview(base64);
-          setSubMenuModal({ ...subMenuModal, data: { ...subMenuModal.data, icon: base64, iconType: 'base64' } });
-        };
-        reader.readAsDataURL(file);
-      }
+      console.log('Dropping submenu icon file:', file.name, file.type, file.size);
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        const base64 = reader.result;
+        setSubMenuIconPreview(base64);
+        setSubMenuModal({ ...subMenuModal, data: { ...subMenuModal.data, icon: base64, iconType: 'base64' } });
+      };
+      reader.readAsDataURL(file);
     }
   };
 
-  const handleLogoUpload = async (e) => {
+  const handleLogoUpload = (e) => {
     const file = e.target.files[0];
     if (file) {
-      try {
-        console.log('Uploading logo file:', file.name, file.type, file.size);
-        const res = await imageAPI.upload(file);
-        console.log('Upload response:', res);
-        const imageId = res.data;
-        const imageUrl = imageAPI.getUrl(imageId);
-        console.log('Logo URL:', imageUrl);
-        setLogoPreview(imageUrl);
-        setHeaderData({ ...headerData, logoUrl: imageUrl });
-      } catch (err) {
-        console.error('Error uploading logo:', err);
-        // Fallback to base64 if upload fails
-        console.log('Falling back to base64 encoding');
-        const reader = new FileReader();
-        reader.onloadend = () => {
-          const base64 = reader.result;
-          setLogoPreview(base64);
-          setHeaderData({ ...headerData, logoUrl: base64 });
-        };
-        reader.readAsDataURL(file);
-      }
+      console.log('Uploading logo file:', file.name, file.type, file.size);
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        const base64 = reader.result;
+        setLogoPreview(base64);
+        setHeaderData({ ...headerData, logoUrl: base64 });
+      };
+      reader.readAsDataURL(file);
     }
   };
 
-  const handleLogoDrop = async (e) => {
+  const handleLogoDrop = (e) => {
     e.preventDefault();
     const file = e.dataTransfer.files[0];
     if (file && file.type.startsWith('image/')) {
-      try {
-        console.log('Dropping logo file:', file.name, file.type, file.size);
-        const res = await imageAPI.upload(file);
-        console.log('Upload response:', res);
-        const imageId = res.data;
-        const imageUrl = imageAPI.getUrl(imageId);
-        console.log('Logo URL:', imageUrl);
-        setLogoPreview(imageUrl);
-        setHeaderData({ ...headerData, logoUrl: imageUrl });
-      } catch (err) {
-        console.error('Error uploading logo:', err);
-        // Fallback to base64 if upload fails
-        console.log('Falling back to base64 encoding');
-        const reader = new FileReader();
-        reader.onloadend = () => {
-          const base64 = reader.result;
-          setLogoPreview(base64);
-          setHeaderData({ ...headerData, logoUrl: base64 });
-        };
-        reader.readAsDataURL(file);
-      }
+      console.log('Dropping logo file:', file.name, file.type, file.size);
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        const base64 = reader.result;
+        setLogoPreview(base64);
+        setHeaderData({ ...headerData, logoUrl: base64 });
+      };
+      reader.readAsDataURL(file);
     }
   };
 
@@ -532,58 +649,32 @@ const AdminDashboard = () => {
     });
   };
 
-  const handleIconUpload = async (e) => {
+  const handleIconUpload = (e) => {
     const file = e.target.files[0];
     if (file) {
-      try {
-        console.log('Uploading icon file:', file.name, file.type, file.size);
-        const res = await imageAPI.upload(file);
-        console.log('Upload response:', res);
-        const imageId = res.data;
-        const imageUrl = imageAPI.getUrl(imageId);
-        console.log('Image URL:', imageUrl);
-        setIconPreview(imageUrl);
-        setMenuItemModal({ ...menuItemModal, data: { ...menuItemModal.data, icon: imageId, iconType: 'binary' } });
-      } catch (err) {
-        console.error('Error uploading icon:', err);
-        // Fallback to base64 if upload fails
-        console.log('Falling back to base64 encoding');
-        const reader = new FileReader();
-        reader.onloadend = () => {
-          const base64 = reader.result;
-          setIconPreview(base64);
-          setMenuItemModal({ ...menuItemModal, data: { ...menuItemModal.data, icon: base64, iconType: 'base64' } });
-        };
-        reader.readAsDataURL(file);
-      }
+      console.log('Uploading icon file:', file.name, file.type, file.size);
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        const base64 = reader.result;
+        setIconPreview(base64);
+        setMenuItemModal({ ...menuItemModal, data: { ...menuItemModal.data, icon: base64, iconType: 'base64' } });
+      };
+      reader.readAsDataURL(file);
     }
   };
 
-  const handleIconDrop = async (e) => {
+  const handleIconDrop = (e) => {
     e.preventDefault();
     const file = e.dataTransfer.files[0];
     if (file && file.type.startsWith('image/')) {
-      try {
-        console.log('Dropping icon file:', file.name, file.type, file.size);
-        const res = await imageAPI.upload(file);
-        console.log('Upload response:', res);
-        const imageId = res.data;
-        const imageUrl = imageAPI.getUrl(imageId);
-        console.log('Image URL:', imageUrl);
-        setIconPreview(imageUrl);
-        setMenuItemModal({ ...menuItemModal, data: { ...menuItemModal.data, icon: imageId, iconType: 'binary' } });
-      } catch (err) {
-        console.error('Error uploading icon:', err);
-        // Fallback to base64 if upload fails
-        console.log('Falling back to base64 encoding');
-        const reader = new FileReader();
-        reader.onloadend = () => {
-          const base64 = reader.result;
-          setIconPreview(base64);
-          setMenuItemModal({ ...menuItemModal, data: { ...menuItemModal.data, icon: base64, iconType: 'base64' } });
-        };
-        reader.readAsDataURL(file);
-      }
+      console.log('Dropping icon file:', file.name, file.type, file.size);
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        const base64 = reader.result;
+        setIconPreview(base64);
+        setMenuItemModal({ ...menuItemModal, data: { ...menuItemModal.data, icon: base64, iconType: 'base64' } });
+      };
+      reader.readAsDataURL(file);
     }
   };
 
@@ -676,7 +767,7 @@ const AdminDashboard = () => {
 
         {/* Tabs */}
         <div className="flex gap-2 mb-6 overflow-x-auto pb-2">
-          {['overview', 'products', 'categories', 'orders', 'header', 'footer', 'seeding'].map((t) => (
+          {['overview', 'products', 'categories', 'orders', 'users', 'header', 'footer', 'seeding'].map((t) => (
             <button
               key={t}
               onClick={() => setTab(t)}
@@ -718,13 +809,22 @@ const AdminDashboard = () => {
         {tab === 'products' && (
           <div className="bg-white rounded-2xl shadow-sm p-4 sm:p-6">
             <div className="flex items-center justify-between mb-4">
-              <h2 className="text-lg font-bold text-gray-800">Products ({products.length})</h2>
+              <h2 className="text-lg font-bold text-gray-800">Products ({filteredProducts.length})</h2>
               <button
                 onClick={() => openProduct(null)}
                 className="inline-flex items-center gap-1.5 bg-gradient-to-r from-purple-500 to-indigo-600 text-white px-4 py-2 rounded-xl text-sm font-medium hover:shadow-lg transition-all"
               >
                 <Plus size={16} /> Add
               </button>
+            </div>
+            <div className="mb-4">
+              <input
+                type="text"
+                placeholder="Search products..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500"
+              />
             </div>
             <div className="overflow-x-auto">
               <table className="w-full text-sm min-w-[640px]">
@@ -739,7 +839,7 @@ const AdminDashboard = () => {
                   </tr>
                 </thead>
                 <tbody>
-                  {products.map((p) => (
+                  {filteredProducts.map((p) => (
                     <tr key={p.id} className="border-b border-gray-50 hover:bg-gray-50">
                       <td className="py-3 pr-4">
                         <div className="flex items-center gap-3">
@@ -775,7 +875,7 @@ const AdminDashboard = () => {
         {tab === 'categories' && (
           <div className="bg-white rounded-2xl shadow-sm p-4 sm:p-6">
             <div className="flex items-center justify-between mb-4">
-              <h2 className="text-lg font-bold text-gray-800">Categories ({categories.length})</h2>
+              <h2 className="text-lg font-bold text-gray-800">Categories ({filteredCategories.length})</h2>
               <button
                 onClick={() => openCategory(null)}
                 className="inline-flex items-center gap-1.5 bg-gradient-to-r from-purple-500 to-indigo-600 text-white px-4 py-2 rounded-xl text-sm font-medium hover:shadow-lg transition-all"
@@ -783,8 +883,17 @@ const AdminDashboard = () => {
                 <Plus size={16} /> Add
               </button>
             </div>
+            <div className="mb-4">
+              <input
+                type="text"
+                placeholder="Search categories..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500"
+              />
+            </div>
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-              {categories.map((c) => (
+              {filteredCategories.map((c) => (
                 <div key={c.id} className="border border-gray-100 rounded-xl p-4 flex items-center gap-3">
                   <div className="w-12 h-12 rounded-lg bg-gray-100 overflow-hidden shrink-0 flex items-center justify-center">
                     {c.imageUrl ? <img src={c.imageUrl} alt="" className="w-full h-full object-cover" /> : '🏷️'}
@@ -810,12 +919,21 @@ const AdminDashboard = () => {
         {/* Orders */}
         {tab === 'orders' && (
           <div className="bg-white rounded-2xl shadow-sm p-4 sm:p-6">
-            <h2 className="text-lg font-bold text-gray-800 mb-4">Orders ({orders.length})</h2>
-            {orders.length === 0 ? (
-              <p className="text-gray-500 text-center py-10">No orders yet.</p>
+            <h2 className="text-lg font-bold text-gray-800 mb-4">Orders ({filteredOrders.length})</h2>
+            <div className="mb-4">
+              <input
+                type="text"
+                placeholder="Search orders..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500"
+              />
+            </div>
+            {filteredOrders.length === 0 ? (
+              <p className="text-gray-500 text-center py-10">No orders found.</p>
             ) : (
               <div className="space-y-4">
-                {orders.map((o) => (
+                {filteredOrders.map((o) => (
                   <div key={o.id} className="border border-gray-100 rounded-xl p-4">
                     <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-3">
                       <div>
@@ -848,6 +966,147 @@ const AdminDashboard = () => {
                 ))}
               </div>
             )}
+          </div>
+        )}
+
+        {/* Users */}
+        {tab === 'users' && (
+          <div className="bg-white rounded-2xl shadow-sm p-4 sm:p-6">
+            <div className="flex items-center justify-between mb-6">
+              <div className="flex items-center gap-3">
+                <div className="bg-gradient-to-r from-purple-500 to-indigo-600 p-3 rounded-xl">
+                  <ShieldCheck className="text-white" size={24} />
+                </div>
+                <div>
+                  <h2 className="text-lg font-bold text-gray-800">Users ({filteredUsers.length})</h2>
+                  <p className="text-sm text-gray-500">Manage user accounts and permissions</p>
+                </div>
+              </div>
+              <button
+                onClick={() => openUser(null)}
+                className="inline-flex items-center gap-1.5 bg-gradient-to-r from-purple-500 to-indigo-600 text-white px-4 py-2 rounded-xl text-sm font-medium hover:shadow-lg transition-all"
+              >
+                <Plus size={16} /> Add User
+              </button>
+            </div>
+            <div className="mb-6 space-y-3">
+              <div className="relative">
+                <input
+                  type="text"
+                  placeholder="Search users by name, email, or phone..."
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                  className="w-full px-4 py-3 pl-10 border border-gray-300 rounded-xl focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all"
+                />
+                <div className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400">
+                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                  </svg>
+                </div>
+              </div>
+              <div className="flex gap-3">
+                <div className="flex-1">
+                  <select
+                    value={filterStatus}
+                    onChange={(e) => setFilterStatus(e.target.value)}
+                    className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all"
+                  >
+                    <option value="all">All Status</option>
+                    <option value="active">Active</option>
+                    <option value="inactive">Inactive</option>
+                  </select>
+                </div>
+                <div className="flex-1">
+                  <select
+                    value={filterRole}
+                    onChange={(e) => setFilterRole(e.target.value)}
+                    className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all"
+                  >
+                    <option value="all">All Roles</option>
+                    <option value="Admin">Admin</option>
+                    <option value="Customer">Customer</option>
+                    <option value="Advertiser">Advertiser</option>
+                    <option value="Other">Other</option>
+                  </select>
+                </div>
+              </div>
+            </div>
+            <div className="overflow-x-auto">
+              <table className="w-full text-sm min-w-[800px]">
+                <thead>
+                  <tr className="text-left text-gray-500 border-b border-gray-100">
+                    <th className="py-3 pr-4">User</th>
+                    <th className="py-3 pr-4">Email</th>
+                    <th className="py-3 pr-4">Phone</th>
+                    <th className="py-3 pr-4">Role</th>
+                    <th className="py-3 pr-4">Status</th>
+                    <th className="py-3 pr-4">Joined</th>
+                    <th className="py-3 pr-4 text-right">Actions</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {filteredUsers.map((u) => (
+                    <tr key={u.id} className="border-b border-gray-50 hover:bg-gradient-to-r hover:from-purple-50 hover:to-indigo-50 transition-all">
+                      <td className="py-4 pr-4">
+                        <div className="flex items-center gap-3">
+                          <div className={`w-12 h-12 rounded-full flex items-center justify-center text-white font-semibold text-lg shadow-md ${
+                            u.role === 'Admin' ? 'bg-gradient-to-br from-purple-500 to-indigo-600' :
+                            u.role === 'Advertiser' ? 'bg-gradient-to-br from-blue-500 to-cyan-600' :
+                            u.role === 'Other' ? 'bg-gradient-to-br from-orange-500 to-amber-600' :
+                            'bg-gradient-to-br from-gray-400 to-gray-500'
+                          }`}>
+                            {u.fullName?.charAt(0).toUpperCase() || 'U'}
+                          </div>
+                          <div>
+                            <span className="font-semibold text-gray-800 block">{u.fullName || '—'}</span>
+                            <span className="text-xs text-gray-500">{u.city || ''}, {u.state || ''}</span>
+                          </div>
+                        </div>
+                      </td>
+                      <td className="py-4 pr-4 text-gray-600">{u.email || '—'}</td>
+                      <td className="py-4 pr-4 text-gray-600">{u.phoneNumber || '—'}</td>
+                      <td className="py-4 pr-4">
+                        <span className={`px-3 py-1.5 rounded-full text-xs font-semibold shadow-sm ${
+                          u.role === 'Admin' ? 'bg-gradient-to-r from-purple-100 to-indigo-100 text-purple-700 border border-purple-200' : 
+                          u.role === 'Advertiser' ? 'bg-gradient-to-r from-blue-100 to-cyan-100 text-blue-700 border border-blue-200' : 
+                          u.role === 'Other' ? 'bg-gradient-to-r from-orange-100 to-amber-100 text-orange-700 border border-orange-200' : 
+                          'bg-gradient-to-r from-gray-100 to-gray-200 text-gray-700 border border-gray-200'
+                        }`}>
+                          {u.role === 'Other' ? (u.customRole || 'Custom') : (u.role || 'Customer')}
+                        </span>
+                      </td>
+                      <td className="py-4 pr-4">
+                        <span className={`px-3 py-1.5 rounded-full text-xs font-semibold shadow-sm ${
+                          u.isActive ? 'bg-gradient-to-r from-green-100 to-emerald-100 text-green-700 border border-green-200' : 'bg-gradient-to-r from-red-100 to-rose-100 text-red-700 border border-red-200'
+                        }`}>
+                          {u.isActive ? 'Active' : 'Inactive'}
+                        </span>
+                      </td>
+                      <td className="py-4 pr-4 text-gray-600">
+                        {u.createdAt ? new Date(u.createdAt).toLocaleDateString() : '—'}
+                      </td>
+                      <td className="py-4 pr-4">
+                        <div className="flex items-center justify-end gap-2">
+                          <button onClick={() => openUser(u)} className="p-2.5 text-blue-600 hover:bg-blue-100 rounded-xl transition-colors" title="Edit">
+                            <Pencil size={16} />
+                          </button>
+                          <button 
+                            onClick={() => toggleUserActive(u.id)}
+                            className={`p-2.5 rounded-xl transition-colors ${u.isActive ? 'text-orange-500 hover:bg-orange-100' : 'text-green-500 hover:bg-green-100'}`}
+                            title={u.isActive ? 'Deactivate' : 'Activate'}
+                          >
+                            {u.isActive ? <X size={16} /> : <Plus size={16} />}
+                          </button>
+                          <button onClick={() => deleteUser(u.id)} className="p-2.5 text-red-500 hover:bg-red-100 rounded-xl transition-colors" title="Delete">
+                            <Trash2 size={16} />
+                          </button>
+                        </div>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
           </div>
         )}
 
@@ -1058,18 +1317,31 @@ const AdminDashboard = () => {
                   <div className="space-y-2">
                     {footerData.socialLinks && footerData.socialLinks.length > 0 ? (
                       footerData.socialLinks.map((link, index) => (
-                        <div key={index} className="flex gap-2">
-                          <input
-                            type="text"
-                            value={link}
-                            onChange={(e) => {
-                              const updatedLinks = [...footerData.socialLinks];
-                              updatedLinks[index] = e.target.value;
-                              setFooterData({ ...footerData, socialLinks: updatedLinks });
-                            }}
-                            className="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500"
-                            placeholder="https://..."
-                          />
+                        <div key={link.id || index} className="flex gap-2 items-start">
+                          <div className="flex-1 grid grid-cols-2 gap-2">
+                            <input
+                              type="text"
+                              value={link.name || ''}
+                              onChange={(e) => {
+                                const updatedLinks = [...footerData.socialLinks];
+                                updatedLinks[index] = { ...updatedLinks[index], name: e.target.value };
+                                setFooterData({ ...footerData, socialLinks: updatedLinks });
+                              }}
+                              className="px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500"
+                              placeholder="Name (e.g., Facebook)"
+                            />
+                            <input
+                              type="text"
+                              value={link.url || ''}
+                              onChange={(e) => {
+                                const updatedLinks = [...footerData.socialLinks];
+                                updatedLinks[index] = { ...updatedLinks[index], url: e.target.value };
+                                setFooterData({ ...footerData, socialLinks: updatedLinks });
+                              }}
+                              className="px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500"
+                              placeholder="URL (e.g., https://facebook.com/eshop)"
+                            />
+                          </div>
                           <button
                             onClick={() => {
                               const updatedLinks = footerData.socialLinks.filter((_, i) => i !== index);
@@ -1085,11 +1357,141 @@ const AdminDashboard = () => {
                       <p className="text-gray-500 text-sm">No social links added</p>
                     )}
                     <button
-                      onClick={() => setFooterData({ ...footerData, socialLinks: [...(footerData.socialLinks || []), ''] })}
+                      onClick={() => setFooterData({ 
+                        ...footerData, 
+                        socialLinks: [...(footerData.socialLinks || []), { 
+                          id: Date.now().toString(), 
+                          name: '', 
+                          url: '', 
+                          displayOrder: (footerData.socialLinks?.length || 0),
+                          isActive: true 
+                        }] 
+                      })}
                       className="text-sm text-blue-600 hover:text-blue-700 font-medium"
                     >
                       + Add Social Link
                     </button>
+                  </div>
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">Contact Information</label>
+                  <div className="space-y-3 bg-gray-50 rounded-lg p-4">
+                    <div>
+                      <label className="block text-xs text-gray-600 mb-1">Email</label>
+                      <input
+                        type="email"
+                        value={footerData.contactInfo?.email || ''}
+                        onChange={(e) => setFooterData({ 
+                          ...footerData, 
+                          contactInfo: { 
+                            ...(footerData.contactInfo || { id: Date.now().toString() }), 
+                            email: e.target.value 
+                          } 
+                        })}
+                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500"
+                        placeholder="contact@eshop.com"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-xs text-gray-600 mb-1">Phone</label>
+                      <input
+                        type="text"
+                        value={footerData.contactInfo?.phone || ''}
+                        onChange={(e) => setFooterData({ 
+                          ...footerData, 
+                          contactInfo: { 
+                            ...(footerData.contactInfo || { id: Date.now().toString() }), 
+                            phone: e.target.value 
+                          } 
+                        })}
+                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500"
+                        placeholder="+1 234 567 890"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-xs text-gray-600 mb-1">Address</label>
+                      <input
+                        type="text"
+                        value={footerData.contactInfo?.address || ''}
+                        onChange={(e) => setFooterData({ 
+                          ...footerData, 
+                          contactInfo: { 
+                            ...(footerData.contactInfo || { id: Date.now().toString() }), 
+                            address: e.target.value 
+                          } 
+                        })}
+                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500"
+                        placeholder="123 Main Street"
+                      />
+                    </div>
+                    <div className="grid grid-cols-2 gap-2">
+                      <div>
+                        <label className="block text-xs text-gray-600 mb-1">City</label>
+                        <input
+                          type="text"
+                          value={footerData.contactInfo?.city || ''}
+                          onChange={(e) => setFooterData({ 
+                            ...footerData, 
+                            contactInfo: { 
+                              ...(footerData.contactInfo || { id: Date.now().toString() }), 
+                              city: e.target.value 
+                            } 
+                          })}
+                          className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500"
+                          placeholder="New York"
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-xs text-gray-600 mb-1">State</label>
+                        <input
+                          type="text"
+                          value={footerData.contactInfo?.state || ''}
+                          onChange={(e) => setFooterData({ 
+                            ...footerData, 
+                            contactInfo: { 
+                              ...(footerData.contactInfo || { id: Date.now().toString() }), 
+                              state: e.target.value 
+                            } 
+                          })}
+                          className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500"
+                          placeholder="NY"
+                        />
+                      </div>
+                    </div>
+                    <div className="grid grid-cols-2 gap-2">
+                      <div>
+                        <label className="block text-xs text-gray-600 mb-1">Zip Code</label>
+                        <input
+                          type="text"
+                          value={footerData.contactInfo?.zipCode || ''}
+                          onChange={(e) => setFooterData({ 
+                            ...footerData, 
+                            contactInfo: { 
+                              ...(footerData.contactInfo || { id: Date.now().toString() }), 
+                              zipCode: e.target.value 
+                            } 
+                          })}
+                          className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500"
+                          placeholder="10001"
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-xs text-gray-600 mb-1">Country</label>
+                        <input
+                          type="text"
+                          value={footerData.contactInfo?.country || ''}
+                          onChange={(e) => setFooterData({ 
+                            ...footerData, 
+                            contactInfo: { 
+                              ...(footerData.contactInfo || { id: Date.now().toString() }), 
+                              country: e.target.value 
+                            } 
+                          })}
+                          className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500"
+                          placeholder="USA"
+                        />
+                      </div>
+                    </div>
                   </div>
                 </div>
                 <div>
@@ -1216,15 +1618,18 @@ const AdminDashboard = () => {
       {/* Product Modal */}
       {productModal.open && (
         <Modal title={productModal.data ? 'Edit Product' : 'Add Product'} onClose={() => setProductModal({ open: false, data: null })}>
-          <form onSubmit={saveProduct} className="space-y-4">
-            <Field label="Name" value={form.name} onChange={(v) => setField('name', v)} required />
+          <form onSubmit={saveProduct} className="space-y-5">
+            <div className="bg-gradient-to-r from-purple-50 to-indigo-50 rounded-xl p-4 border border-purple-100">
+              <Field label="Name" value={form.name} onChange={(v) => setField('name', v)} required />
+            </div>
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">Description</label>
               <textarea
                 value={form.description || ''}
                 onChange={(e) => setField('description', e.target.value)}
-                rows={2}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500"
+                rows={3}
+                className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all"
+                placeholder="Enter product description..."
               />
             </div>
             <div>
@@ -1233,7 +1638,7 @@ const AdminDashboard = () => {
                 value={form.categoryId || ''}
                 onChange={(e) => setField('categoryId', e.target.value)}
                 required
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500"
+                className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all"
               >
                 <option value="">Select category</option>
                 {categories.map((c) => (
@@ -1241,27 +1646,81 @@ const AdminDashboard = () => {
                 ))}
               </select>
             </div>
-            <div className="grid grid-cols-2 gap-3">
-              <Field label="Price" type="number" value={form.price} onChange={(v) => setField('price', v)} required />
-              <Field label="Original Price" type="number" value={form.originalPrice} onChange={(v) => setField('originalPrice', v)} />
+            <div className="grid grid-cols-2 gap-4">
+              <div className="bg-gradient-to-r from-green-50 to-emerald-50 rounded-xl p-4 border border-green-100">
+                <Field label="Price" type="number" value={form.price} onChange={(v) => setField('price', v)} required />
+              </div>
+              <div className="bg-gradient-to-r from-amber-50 to-orange-50 rounded-xl p-4 border border-amber-100">
+                <Field label="Original Price" type="number" value={form.originalPrice} onChange={(v) => setField('originalPrice', v)} />
+              </div>
             </div>
-            <Field label="Image URL" value={form.imageUrl} onChange={(v) => setField('imageUrl', v)} />
-            <div className="grid grid-cols-3 gap-3">
-              <Field label="Stock" type="number" value={form.stock} onChange={(v) => setField('stock', v)} />
-              <Field label="Rating" type="number" value={form.rating} onChange={(v) => setField('rating', v)} />
-              <Field label="Reviews" type="number" value={form.reviewCount} onChange={(v) => setField('reviewCount', v)} />
+            <div className="bg-gradient-to-r from-blue-50 to-cyan-50 rounded-xl p-4 border border-blue-100">
+              <label className="block text-sm font-medium text-gray-700 mb-2">Product Image</label>
+              <div
+                onDrop={handleProductImageDrop}
+                onDragOver={(e) => e.preventDefault()}
+                className="border-2 border-dashed border-blue-300 rounded-xl p-6 text-center hover:border-purple-500 hover:bg-purple-50 transition-all cursor-pointer"
+              >
+                {productImagePreview ? (
+                  <div className="relative inline-block">
+                    <img src={productImagePreview} alt="Product preview" className="h-40 object-contain mx-auto rounded-lg shadow-md" />
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setProductImagePreview(null);
+                        setForm({ ...form, imageUrl: '' });
+                      }}
+                      className="absolute -top-3 -right-3 bg-red-500 text-white rounded-full w-8 h-8 flex items-center justify-center text-sm hover:bg-red-600 shadow-lg"
+                    >
+                      X
+                    </button>
+                  </div>
+                ) : (
+                  <div>
+                    <svg className="mx-auto h-16 w-16 text-blue-400" stroke="currentColor" fill="none" viewBox="0 0 48 48">
+                      <path d="M28 8H12a4 4 0 00-4 4v20m32-12v8m0 0v8a4 4 0 01-4 4H12a4 4 0 01-4-4v-4m32-4l-3.172-3.172a4 4 0 00-5.656 0L28 28M8 32l9.172-9.172a4 4 0 015.656 0L28 28m0 0l4 4m4-24h8m-4-4v8m-12 4h.02" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" />
+                    </svg>
+                    <p className="mt-2 text-sm text-gray-600 font-medium">Drop product image here or click to upload</p>
+                    <p className="text-xs text-gray-400 mt-1">PNG, JPG, GIF up to 5MB</p>
+                  </div>
+                )}
+                <input
+                  type="file"
+                  accept="image/*"
+                  onChange={handleProductImageUpload}
+                  className="hidden"
+                  id="product-image-upload"
+                />
+                <label
+                  htmlFor="product-image-upload"
+                  className="mt-3 inline-block px-4 py-2 bg-blue-600 text-white rounded-lg text-sm font-medium hover:bg-blue-700 transition-colors cursor-pointer"
+                >
+                  Choose file
+                </label>
+              </div>
             </div>
-            <div className="flex items-center gap-4">
-              <label className="flex items-center gap-2 text-sm text-gray-700">
-                <input type="checkbox" checked={!!form.isFeatured} onChange={(e) => setField('isFeatured', e.target.checked)} />
-                Featured
+            <div className="grid grid-cols-3 gap-4">
+              <div className="bg-gradient-to-r from-purple-50 to-pink-50 rounded-xl p-4 border border-purple-100">
+                <Field label="Stock" type="number" value={form.stock} onChange={(v) => setField('stock', v)} />
+              </div>
+              <div className="bg-gradient-to-r from-yellow-50 to-amber-50 rounded-xl p-4 border border-yellow-100">
+                <Field label="Rating" type="number" value={form.rating} onChange={(v) => setField('rating', v)} />
+              </div>
+              <div className="bg-gradient-to-r from-teal-50 to-cyan-50 rounded-xl p-4 border border-teal-100">
+                <Field label="Reviews" type="number" value={form.reviewCount} onChange={(v) => setField('reviewCount', v)} />
+              </div>
+            </div>
+            <div className="flex items-center gap-6 bg-gray-50 rounded-xl p-4">
+              <label className="flex items-center gap-3 text-sm text-gray-700 cursor-pointer">
+                <input type="checkbox" checked={!!form.isFeatured} onChange={(e) => setField('isFeatured', e.target.checked)} className="w-5 h-5 text-purple-600 rounded focus:ring-purple-500" />
+                <span className="font-medium">Featured Product</span>
               </label>
-              <label className="flex items-center gap-2 text-sm text-gray-700">
-                <input type="checkbox" checked={form.isActive !== false} onChange={(e) => setField('isActive', e.target.checked)} />
-                Active
+              <label className="flex items-center gap-3 text-sm text-gray-700 cursor-pointer">
+                <input type="checkbox" checked={form.isActive !== false} onChange={(e) => setField('isActive', e.target.checked)} className="w-5 h-5 text-purple-600 rounded focus:ring-purple-500" />
+                <span className="font-medium">Active</span>
               </label>
             </div>
-            <button type="submit" disabled={saving} className="w-full bg-gradient-to-r from-purple-500 to-indigo-600 text-white py-2.5 rounded-xl font-semibold disabled:opacity-60">
+            <button type="submit" disabled={saving} className="w-full bg-gradient-to-r from-purple-500 to-indigo-600 text-white py-3 rounded-xl font-semibold disabled:opacity-60 hover:shadow-lg transition-all">
               {saving ? 'Saving...' : 'Save Product'}
             </button>
           </form>
@@ -1282,7 +1741,50 @@ const AdminDashboard = () => {
                 className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500"
               />
             </div>
-            <Field label="Image URL" value={form.imageUrl} onChange={(v) => setField('imageUrl', v)} />
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">Category Image</label>
+              <div
+                onDrop={handleCategoryImageDrop}
+                onDragOver={(e) => e.preventDefault()}
+                className="border-2 border-dashed border-gray-300 rounded-lg p-4 text-center hover:border-purple-500 transition-colors cursor-pointer"
+              >
+                {categoryImagePreview ? (
+                  <div className="relative inline-block">
+                    <img src={categoryImagePreview} alt="Category preview" className="h-32 object-contain mx-auto" />
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setCategoryImagePreview(null);
+                        setForm({ ...form, imageUrl: '' });
+                      }}
+                      className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full w-6 h-6 flex items-center justify-center text-xs hover:bg-red-600"
+                    >
+                      X
+                    </button>
+                  </div>
+                ) : (
+                  <div>
+                    <svg className="mx-auto h-12 w-12 text-gray-400" stroke="currentColor" fill="none" viewBox="0 0 48 48">
+                      <path d="M28 8H12a4 4 0 00-4 4v20m32-12v8m0 0v8a4 4 0 01-4 4H12a4 4 0 01-4-4v-4m32-4l-3.172-3.172a4 4 0 00-5.656 0L28 28M8 32l9.172-9.172a4 4 0 015.656 0L28 28m0 0l4 4m4-24h8m-4-4v8m-12 4h.02" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" />
+                    </svg>
+                    <p className="mt-1 text-sm text-gray-600">Drop category image here or click to upload</p>
+                  </div>
+                )}
+                <input
+                  type="file"
+                  accept="image/*"
+                  onChange={handleCategoryImageUpload}
+                  className="hidden"
+                  id="category-image-upload"
+                />
+                <label
+                  htmlFor="category-image-upload"
+                  className="mt-2 inline-block text-sm text-purple-600 hover:text-purple-700 cursor-pointer"
+                >
+                  Choose file
+                </label>
+              </div>
+            </div>
             <Field label="Display Order" type="number" value={form.displayOrder} onChange={(v) => setField('displayOrder', v)} />
             <label className="flex items-center gap-2 text-sm text-gray-700">
               <input type="checkbox" checked={form.isActive !== false} onChange={(e) => setField('isActive', e.target.checked)} />
@@ -1290,6 +1792,120 @@ const AdminDashboard = () => {
             </label>
             <button type="submit" disabled={saving} className="w-full bg-gradient-to-r from-purple-500 to-indigo-600 text-white py-2.5 rounded-xl font-semibold disabled:opacity-60">
               {saving ? 'Saving...' : 'Save Category'}
+            </button>
+          </form>
+        </Modal>
+      )}
+
+      {/* User Modal */}
+      {userModal.open && (
+        <Modal title={userModal.data?.id ? 'Edit User' : 'Add User'} onClose={() => setUserModal({ open: false, data: null })}>
+          <form onSubmit={saveUser} className="space-y-4">
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">Full Name</label>
+              <input
+                type="text"
+                value={userModal.data?.fullName || ''}
+                onChange={(e) => setUserModal({ ...userModal, data: { ...userModal.data, fullName: e.target.value } })}
+                required
+                className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all"
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">Email</label>
+              <input
+                type="email"
+                value={userModal.data?.email || ''}
+                onChange={(e) => setUserModal({ ...userModal, data: { ...userModal.data, email: e.target.value } })}
+                required
+                className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all"
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">Phone Number</label>
+              <input
+                type="tel"
+                value={userModal.data?.phoneNumber || ''}
+                onChange={(e) => setUserModal({ ...userModal, data: { ...userModal.data, phoneNumber: e.target.value } })}
+                className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all"
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">Address</label>
+              <input
+                type="text"
+                value={userModal.data?.address || ''}
+                onChange={(e) => setUserModal({ ...userModal, data: { ...userModal.data, address: e.target.value } })}
+                className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all"
+              />
+            </div>
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">City</label>
+                <input
+                  type="text"
+                  value={userModal.data?.city || ''}
+                  onChange={(e) => setUserModal({ ...userModal, data: { ...userModal.data, city: e.target.value } })}
+                  className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">State</label>
+                <input
+                  type="text"
+                  value={userModal.data?.state || ''}
+                  onChange={(e) => setUserModal({ ...userModal, data: { ...userModal.data, state: e.target.value } })}
+                  className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all"
+                />
+              </div>
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">Zip Code</label>
+              <input
+                type="text"
+                value={userModal.data?.zipCode || ''}
+                onChange={(e) => setUserModal({ ...userModal, data: { ...userModal.data, zipCode: e.target.value } })}
+                className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all"
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">Role</label>
+              <select
+                value={userModal.data?.role || 'Customer'}
+                onChange={(e) => setUserModal({ ...userModal, data: { ...userModal.data, role: e.target.value } })}
+                className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all"
+              >
+                <option value="Customer">Customer</option>
+                <option value="Admin">Admin</option>
+                <option value="Advertiser">Advertiser</option>
+                <option value="Other">Other (Custom)</option>
+              </select>
+            </div>
+            {userModal.data?.role === 'Other' && (
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Custom Role</label>
+                <input
+                  type="text"
+                  value={userModal.data?.customRole || ''}
+                  onChange={(e) => setUserModal({ ...userModal, data: { ...userModal.data, customRole: e.target.value } })}
+                  placeholder="Enter custom role name"
+                  className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all"
+                />
+              </div>
+            )}
+            <div className="flex items-center gap-4 bg-gray-50 rounded-xl p-4">
+              <label className="flex items-center gap-3 text-sm text-gray-700 cursor-pointer">
+                <input
+                  type="checkbox"
+                  checked={userModal.data?.isActive !== false}
+                  onChange={(e) => setUserModal({ ...userModal, data: { ...userModal.data, isActive: e.target.checked } })}
+                  className="w-5 h-5 text-purple-600 rounded focus:ring-purple-500"
+                />
+                <span className="font-medium">Active</span>
+              </label>
+            </div>
+            <button type="submit" disabled={saving} className="w-full bg-gradient-to-r from-purple-500 to-indigo-600 text-white py-3 rounded-xl font-semibold disabled:opacity-60 hover:shadow-lg transition-all">
+              {saving ? 'Saving...' : 'Save User'}
             </button>
           </form>
         </Modal>
@@ -1537,6 +2153,15 @@ const AdminDashboard = () => {
         onClose={() => setDeleteModal({ open: false, item: null, type: null, onConfirm: null })}
         onConfirm={deleteModal.onConfirm}
       />
+
+      {/* Custom Confirmation Modal */}
+      <ConfirmModal
+        open={confirmModal.open}
+        title={confirmModal.title}
+        message={confirmModal.message}
+        onClose={() => setConfirmModal({ open: false, title: '', message: '', onConfirm: null })}
+        onConfirm={confirmModal.onConfirm}
+      />
     </div>
   );
 };
@@ -1595,6 +2220,48 @@ const DeleteConfirmModal = ({ open, item, type, onClose, onConfirm }) => {
             className="flex-1 px-4 py-2.5 bg-red-600 text-white rounded-lg font-medium hover:bg-red-700 transition-colors"
           >
             Delete
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+const ConfirmModal = ({ open, title, message, onClose, onConfirm }) => {
+  if (!open) return null;
+  
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm" onClick={onClose}>
+      <div
+        className="bg-white rounded-2xl shadow-2xl w-full max-w-md p-6 border border-gray-100"
+        onClick={(e) => e.stopPropagation()}
+      >
+        <div className="flex items-center gap-4 mb-4">
+          <div className="bg-orange-100 rounded-full p-3">
+            <AlertCircle className="text-orange-600" size={24} />
+          </div>
+          <div>
+            <h3 className="text-lg font-bold text-gray-800">{title}</h3>
+            <p className="text-sm text-gray-500">Please confirm your action</p>
+          </div>
+        </div>
+        
+        <div className="bg-gray-50 rounded-lg p-4 mb-6">
+          <p className="text-sm text-gray-600">{message}</p>
+        </div>
+        
+        <div className="flex gap-3">
+          <button
+            onClick={onClose}
+            className="flex-1 px-4 py-2.5 border border-gray-300 rounded-lg text-gray-700 font-medium hover:bg-gray-50 transition-colors"
+          >
+            Cancel
+          </button>
+          <button
+            onClick={onConfirm}
+            className="flex-1 px-4 py-2.5 bg-gradient-to-r from-purple-500 to-indigo-600 text-white rounded-lg font-medium hover:shadow-lg transition-all"
+          >
+            Confirm
           </button>
         </div>
       </div>

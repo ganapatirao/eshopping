@@ -39,7 +39,39 @@ const SmartFooter = () => {
           {/* Company Info */}
           <div>
             <h3 className="text-xl font-bold mb-4">{footerData.companyName}</h3>
-            <p className="text-gray-400">{footerData.description}</p>
+            <p className="text-gray-400 mb-4">{footerData.description}</p>
+            
+            {/* Contact Information */}
+            {footerData.contactInfo && (
+              <div className="space-y-2 text-sm">
+                {footerData.contactInfo.email && (
+                  <p className="text-gray-400">
+                    <span className="font-semibold text-gray-300">Email:</span> {footerData.contactInfo.email}
+                  </p>
+                )}
+                {footerData.contactInfo.phone && (
+                  <p className="text-gray-400">
+                    <span className="font-semibold text-gray-300">Phone:</span> {footerData.contactInfo.phone}
+                  </p>
+                )}
+                {footerData.contactInfo.address && (
+                  <p className="text-gray-400">
+                    <span className="font-semibold text-gray-300">Address:</span> {footerData.contactInfo.address}
+                  </p>
+                )}
+                {(footerData.contactInfo.city || footerData.contactInfo.state || footerData.contactInfo.zipCode || footerData.contactInfo.country) && (
+                  <p className="text-gray-400">
+                    {footerData.contactInfo.city && footerData.contactInfo.city}
+                    {footerData.contactInfo.city && footerData.contactInfo.state && ', '}
+                    {footerData.contactInfo.state && footerData.contactInfo.state}
+                    {footerData.contactInfo.state && footerData.contactInfo.zipCode && ' '}
+                    {footerData.contactInfo.zipCode && footerData.contactInfo.zipCode}
+                    {(footerData.contactInfo.city || footerData.contactInfo.state || footerData.contactInfo.zipCode) && footerData.contactInfo.country && ', '}
+                    {footerData.contactInfo.country && footerData.contactInfo.country}
+                  </p>
+                )}
+              </div>
+            )}
           </div>
 
           {/* Footer Sections */}
@@ -71,18 +103,22 @@ const SmartFooter = () => {
         {/* Social Links */}
         {footerData.socialLinks && footerData.socialLinks.length > 0 && (
           <div className="mt-8 pt-8 border-t border-gray-700">
-            <div className="flex space-x-4">
-              {footerData.socialLinks.map((link, index) => (
-                <a
-                  key={index}
-                  href={link}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="text-gray-400 hover:text-white transition-colors"
-                >
-                  Social {index + 1}
-                </a>
-              ))}
+            <h5 className="text-sm font-semibold text-gray-300 mb-4">Follow Us</h5>
+            <div className="flex flex-wrap gap-4">
+              {footerData.socialLinks
+                .filter(link => link.isActive !== false)
+                .sort((a, b) => a.displayOrder - b.displayOrder)
+                .map((link) => (
+                  <a
+                    key={link.id}
+                    href={link.url}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-gray-400 hover:text-white transition-colors"
+                  >
+                    {link.name || 'Social Link'}
+                  </a>
+                ))}
             </div>
           </div>
         )}

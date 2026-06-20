@@ -27,4 +27,5 @@ public class MongoDbContext
     public IMongoCollection<TaxConfiguration> TaxConfigurations => _database.GetCollection<TaxConfiguration>("TaxConfigurations");
     public IMongoCollection<AddressConfiguration> AddressConfigurations => _database.GetCollection<AddressConfiguration>("AddressConfigurations");
     public IMongoCollection<BsonDocument> Images => _database.GetCollection<BsonDocument>("Images");
+    public IMongoCollection<User> Users => _database.GetCollection<User>("Users");
 }

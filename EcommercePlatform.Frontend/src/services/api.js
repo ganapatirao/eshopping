@@ -108,4 +108,13 @@ export const seedAPI = {
   seedDatabase: () => api.post('/seed'),
 };
 
+export const usersAPI = {
+  getAll: () => api.get('/users'),
+  getById: (id) => api.get(`/users/${id}`),
+  create: (data) => api.post('/users', data),
+  update: (id, data) => api.put(`/users/${id}`, data),
+  toggleActive: (id) => api.patch(`/users/${id}/toggle-active`),
+  remove: (id) => api.delete(`/users/${id}`),
+};
+
 export default api;
