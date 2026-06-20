@@ -7,7 +7,7 @@ export default defineConfig({
     port: 3000,
     proxy: {
       '/api': {
-        target: 'http://localhost:5227',
+        target: 'https://ganeshtech2017.runasp.net/api',
         changeOrigin: true,
       }
     }

@@ -1,10 +1,10 @@
 import React, { useState } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
-import { Mail, Lock, LogIn, Eye, EyeOff, ShoppingBag, ShieldCheck, User as UserIcon } from 'lucide-react';
+import { Mail, Lock, LogIn, Eye, EyeOff, ShoppingBag } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 
 const LoginPage = () => {
-  const { login, accounts } = useAuth();
+  const { login } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
   const redirectTo = location.state?.from || '/';
@@ -27,12 +27,6 @@ const LoginPage = () => {
     } else {
       setError(result.error);
     }
-  };
-
-  const quickFill = (acct) => {
-    setEmail(acct.email);
-    setPassword(acct.password);
-    setError('');
   };
 
   return (
@@ -117,49 +111,6 @@ const LoginPage = () => {
             Create one
           </Link>
         </p>
-
-        <div className="mt-6">
-          <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-2 text-center">
-            Quick sign-in (tap to fill)
-          </p>
-          <div className="space-y-2">
-            {accounts.map((acct) => (
-              <button
-                key={acct.email}
-                type="button"
-                onClick={() => quickFill(acct)}
-                className="w-full flex items-center gap-3 p-3 rounded-xl border border-gray-200 hover:border-blue-400 hover:bg-blue-50/50 transition-colors text-left"
-              >
-                <span
-                  className={`flex items-center justify-center h-9 w-9 rounded-lg text-white shrink-0 ${
-                    acct.role === 'Admin'
-                      ? 'bg-gradient-to-br from-amber-500 to-orange-600'
-                      : 'bg-gradient-to-br from-blue-500 to-indigo-600'
-                  }`}
-                >
-                  {acct.role === 'Admin' ? <ShieldCheck size={18} /> : <UserIcon size={18} />}
-                </span>
-                <div className="min-w-0 flex-1">
-                  <div className="flex items-center gap-2">
-                    <span className="text-sm font-semibold text-gray-800 truncate">{acct.fullName}</span>
-                    <span
-                      className={`text-[10px] font-bold px-1.5 py-0.5 rounded-full ${
-                        acct.role === 'Admin'
-                          ? 'bg-amber-100 text-amber-700'
-                          : 'bg-blue-100 text-blue-700'
-                      }`}
-                    >
-                      {acct.role}
-                    </span>
-                  </div>
-                  <p className="text-xs text-gray-500 truncate">
-                    {acct.email} / {acct.password}
-                  </p>
-                </div>
-              </button>
-            ))}
-          </div>
-        </div>
       </div>
     </div>
   );

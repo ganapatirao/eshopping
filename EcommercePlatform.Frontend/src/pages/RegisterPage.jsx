@@ -45,12 +45,20 @@ const RegisterPage = () => {
       <div className="pointer-events-none absolute -bottom-24 -right-16 h-80 w-80 rounded-full bg-pink-400/20 blur-3xl" />
 
       <div className="w-full max-w-md bg-white rounded-3xl shadow-2xl p-8 relative">
-        <div className="flex flex-col items-center mb-6">
-          <span className="flex items-center justify-center h-14 w-14 rounded-2xl bg-gradient-to-br from-blue-600 to-purple-600 text-white shadow-lg mb-3">
-            <ShoppingBag size={28} />
-          </span>
-          <h1 className="text-2xl font-bold text-gray-900">Create your account</h1>
-          <p className="text-gray-500 text-sm mt-1">Join us and start shopping</p>
+        <div className="flex items-center justify-between mb-6">
+          <Link to="/" className="text-gray-600 hover:text-blue-600 transition-colors">
+            <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" />
+            </svg>
+          </Link>
+          <div className="flex flex-col items-center">
+            <span className="flex items-center justify-center h-14 w-14 rounded-2xl bg-gradient-to-br from-blue-600 to-purple-600 text-white shadow-lg mb-3">
+              <ShoppingBag size={28} />
+            </span>
+            <h1 className="text-2xl font-bold text-gray-900">Create your account</h1>
+            <p className="text-gray-500 text-sm mt-1">Join us and start shopping</p>
+          </div>
+          <div className="w-6"></div>
         </div>
 
         {error && (
