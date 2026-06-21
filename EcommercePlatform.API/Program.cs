@@ -49,22 +49,22 @@ app.UseCors("AllowAll");
 app.UseAuthorization();
 app.MapControllers();
 
-// Auto-seed validation settings if the collection is empty
-using (var scope = app.Services.CreateScope())
-{
-    try
-    {
-        var ctx = scope.ServiceProvider.GetRequiredService<MongoDbContext>();
-        var existing = await ctx.ValidationSettings.CountDocumentsAsync(FilterDefinition<ValidationSetting>.Empty);
-        if (existing == 0)
-        {
-            await ctx.ValidationSettings.InsertManyAsync(ValidationSeedData.GetAllSettings());
-        }
-    }
-    catch (Exception ex)
-    {
-        Console.WriteLine($"Validation seed skipped: {ex.Message}");
-    }
-}
+// // Auto-seed validation settings if the collection is empty
+// using (var scope = app.Services.CreateScope())
+// {
+//     try
+//     {
+//         var ctx = scope.ServiceProvider.GetRequiredService<MongoDbContext>();
+//         var existing = await ctx.ValidationSettings.CountDocumentsAsync(FilterDefinition<ValidationSetting>.Empty);
+//         if (existing == 0)
+//         {
+//             await ctx.ValidationSettings.InsertManyAsync(ValidationSeedData.GetAllSettings());
+//         }
+//     }
+//     catch (Exception ex)
+//     {
+//         Console.WriteLine($"Validation seed skipped: {ex.Message}");
+//     }
+// }
 
 app.Run();
