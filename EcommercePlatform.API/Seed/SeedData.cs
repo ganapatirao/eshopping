@@ -42,27 +42,126 @@ public class SeedData
     {
         var products = new List<Product>
         {
-            new Product { Id = "prod1", Name = "Smartphone Pro", Description = "Latest smartphone with advanced features, stunning display, and all-day battery life.", CategoryId = "cat1", SubCategoryId = "cat1", Price = 999.99m, OriginalPrice = 1199.99m, Stock = 50, IsFeatured = true, Rating = 4.5m, ReviewCount = 120,
+            new Product { 
+                Id = "prod1", 
+                Name = "Smartphone Pro", 
+                Description = "Latest smartphone with advanced features, stunning display, and all-day battery life.", 
+                CategoryId = "cat1", 
+                SubCategoryId = "cat1", 
+                Price = 999.99m, 
+                OriginalPrice = 1199.99m, 
+                Stock = 50, 
+                IsFeatured = true, 
+                Rating = 4.5m, 
+                ReviewCount = 120,
                 ImageUrl = "https://images.unsplash.com/photo-1511707171634-5f897ff02aa9?w=700&h=700&fit=crop",
-                ImageUrls = new List<string> { "https://images.unsplash.com/photo-1511707171634-5f897ff02aa9?w=700&h=700&fit=crop", "https://images.unsplash.com/photo-1592899677977-9c10ca588bbd?w=700&h=700&fit=crop", "https://images.unsplash.com/photo-1510557880182-3d4d3cba35a5?w=700&h=700&fit=crop" } },
-            new Product { Id = "prod2", Name = "Laptop Ultra", Description = "High-performance laptop for professionals with a sleek aluminum body.", CategoryId = "cat1", SubCategoryId = "cat1", Price = 1499.99m, OriginalPrice = 1799.99m, Stock = 30, IsFeatured = true, Rating = 4.7m, ReviewCount = 85,
+                ImageUrls = new List<string> { "https://images.unsplash.com/photo-1511707171634-5f897ff02aa9?w=700&h=700&fit=crop", "https://images.unsplash.com/photo-1592899677977-9c10ca588bbd?w=700&h=700&fit=crop", "https://images.unsplash.com/photo-1510557880182-3d4d3cba35a5?w=700&h=700&fit=crop" },
+                AvailableColors = new List<ColorOption> { new ColorOption { Name = "Black", Code = "#000000" }, new ColorOption { Name = "White", Code = "#FFFFFF" }, new ColorOption { Name = "Blue", Code = "#0000FF" } },
+                AvailableSizes = new List<string> { "128GB", "256GB", "512GB" },
+                Variants = new List<ProductVariant>
+                {
+                    new ProductVariant { Id = "var1", Color = "Black", ColorCode = "#000000", Size = "128GB", Price = 999.99m, OriginalPrice = 1199.99m, Stock = 20 },
+                    new ProductVariant { Id = "var2", Color = "Black", ColorCode = "#000000", Size = "256GB", Price = 1099.99m, OriginalPrice = 1299.99m, Stock = 15 },
+                    new ProductVariant { Id = "var3", Color = "White", ColorCode = "#FFFFFF", Size = "128GB", Price = 999.99m, OriginalPrice = 1199.99m, Stock = 10 },
+                    new ProductVariant { Id = "var4", Color = "Blue", ColorCode = "#0000FF", Size = "256GB", Price = 1099.99m, OriginalPrice = 1299.99m, Stock = 5 }
+                }
+            },
+            new Product { 
+                Id = "prod2", 
+                Name = "Laptop Ultra", 
+                Description = "High-performance laptop for professionals with a sleek aluminum body.", 
+                CategoryId = "cat1", 
+                SubCategoryId = "cat1", 
+                Price = 1499.99m, 
+                OriginalPrice = 1799.99m, 
+                Stock = 30, 
+                IsFeatured = true, 
+                Rating = 4.7m, 
+                ReviewCount = 85,
                 ImageUrl = "https://images.unsplash.com/photo-1496181133206-80ce9b88a853?w=700&h=700&fit=crop",
-                ImageUrls = new List<string> { "https://images.unsplash.com/photo-1496181133206-80ce9b88a853?w=700&h=700&fit=crop", "https://images.unsplash.com/photo-1517336714731-489689fd1ca8?w=700&h=700&fit=crop", "https://images.unsplash.com/photo-1525547719571-a2d4ac8945e2?w=700&h=700&fit=crop" } },
+                ImageUrls = new List<string> { "https://images.unsplash.com/photo-1496181133206-80ce9b88a853?w=700&h=700&fit=crop", "https://images.unsplash.com/photo-1517336714731-489689fd1ca8?w=700&h=700&fit=crop", "https://images.unsplash.com/photo-1525547719571-a2d4ac8945e2?w=700&h=700&fit=crop" },
+                AvailableColors = new List<ColorOption> { new ColorOption { Name = "Silver", Code = "#C0C0C0" }, new ColorOption { Name = "Space Gray", Code = "#2D2D2D" } },
+                AvailableSizes = new List<string> { "13-inch", "15-inch", "16-inch" },
+                Variants = new List<ProductVariant>
+                {
+                    new ProductVariant { Id = "var5", Color = "Silver", ColorCode = "#C0C0C0", Size = "13-inch", Price = 1499.99m, OriginalPrice = 1799.99m, Stock = 10 },
+                    new ProductVariant { Id = "var6", Color = "Silver", ColorCode = "#C0C0C0", Size = "15-inch", Price = 1799.99m, OriginalPrice = 2099.99m, Stock = 12 },
+                    new ProductVariant { Id = "var7", Color = "Space Gray", ColorCode = "#2D2D2D", Size = "16-inch", Price = 1999.99m, OriginalPrice = 2399.99m, Stock = 8 }
+                }
+            },
             new Product { Id = "prod3", Name = "Wireless Headphones", Description = "Premium noise-cancelling headphones with immersive sound.", CategoryId = "cat1", SubCategoryId = "cat1", Price = 299.99m, Stock = 100, Rating = 4.3m, ReviewCount = 200,
                 ImageUrl = "https://images.unsplash.com/photo-1505740420928-5e560c06d30e?w=700&h=700&fit=crop",
                 ImageUrls = new List<string> { "https://images.unsplash.com/photo-1505740420928-5e560c06d30e?w=700&h=700&fit=crop", "https://images.unsplash.com/photo-1484704849700-f032a568e944?w=700&h=700&fit=crop" } },
-            new Product { Id = "prod4", Name = "Designer Jacket", Description = "Stylish designer jacket crafted from premium materials.", CategoryId = "cat2", SubCategoryId = "cat2", Price = 199.99m, OriginalPrice = 249.99m, Stock = 45, IsFeatured = true, Rating = 4.6m, ReviewCount = 95,
+            new Product { 
+                Id = "prod4", 
+                Name = "Designer Jacket", 
+                Description = "Stylish designer jacket crafted from premium materials.", 
+                CategoryId = "cat2", 
+                SubCategoryId = "cat2", 
+                Price = 199.99m, 
+                OriginalPrice = 249.99m, 
+                Stock = 45, 
+                IsFeatured = true, 
+                Rating = 4.6m, 
+                ReviewCount = 95,
                 ImageUrl = "https://images.unsplash.com/photo-1551028719-00167b16eac5?w=700&h=700&fit=crop",
-                ImageUrls = new List<string> { "https://images.unsplash.com/photo-1551028719-00167b16eac5?w=700&h=700&fit=crop", "https://images.unsplash.com/photo-1591047139829-d91aecb6caea?w=700&h=700&fit=crop" } },
-            new Product { Id = "prod5", Name = "Running Shoes", Description = "Comfortable running shoes with responsive cushioning.", CategoryId = "cat2", SubCategoryId = "cat2", Price = 129.99m, Stock = 80, Rating = 4.4m, ReviewCount = 150,
+                ImageUrls = new List<string> { "https://images.unsplash.com/photo-1551028719-00167b16eac5?w=700&h=700&fit=crop", "https://images.unsplash.com/photo-1591047139829-d91aecb6caea?w=700&h=700&fit=crop" },
+                AvailableColors = new List<ColorOption> { new ColorOption { Name = "Black", Code = "#000000" }, new ColorOption { Name = "Brown", Code = "#8B4513" }, new ColorOption { Name = "Navy", Code = "#000080" } },
+                AvailableSizes = new List<string> { "S", "M", "L", "XL" },
+                Variants = new List<ProductVariant>
+                {
+                    new ProductVariant { Id = "var8", Color = "Black", ColorCode = "#000000", Size = "M", Price = 199.99m, OriginalPrice = 249.99m, Stock = 15 },
+                    new ProductVariant { Id = "var9", Color = "Black", ColorCode = "#000000", Size = "L", Price = 199.99m, OriginalPrice = 249.99m, Stock = 12 },
+                    new ProductVariant { Id = "var10", Color = "Brown", ColorCode = "#8B4513", Size = "M", Price = 199.99m, OriginalPrice = 249.99m, Stock = 10 },
+                    new ProductVariant { Id = "var11", Color = "Navy", ColorCode = "#000080", Size = "XL", Price = 219.99m, OriginalPrice = 269.99m, Stock = 8 }
+                }
+            },
+            new Product { 
+                Id = "prod5", 
+                Name = "Running Shoes", 
+                Description = "Comfortable running shoes with responsive cushioning.", 
+                CategoryId = "cat2", 
+                SubCategoryId = "cat2", 
+                Price = 129.99m, 
+                Stock = 80, 
+                Rating = 4.4m, 
+                ReviewCount = 150,
                 ImageUrl = "https://images.unsplash.com/photo-1542291026-7eec264c27ff?w=700&h=700&fit=crop",
-                ImageUrls = new List<string> { "https://images.unsplash.com/photo-1542291026-7eec264c27ff?w=700&h=700&fit=crop", "https://images.unsplash.com/photo-1460353581641-37baddab0fa2?w=700&h=700&fit=crop" } },
+                ImageUrls = new List<string> { "https://images.unsplash.com/photo-1542291026-7eec264c27ff?w=700&h=700&fit=crop", "https://images.unsplash.com/photo-1460353581641-37baddab0fa2?w=700&h=700&fit=crop" },
+                AvailableColors = new List<ColorOption> { new ColorOption { Name = "Red", Code = "#FF0000" }, new ColorOption { Name = "Blue", Code = "#0000FF" }, new ColorOption { Name = "Black", Code = "#000000" }, new ColorOption { Name = "White", Code = "#FFFFFF" } },
+                AvailableSizes = new List<string> { "7", "8", "9", "10", "11" },
+                Variants = new List<ProductVariant>
+                {
+                    new ProductVariant { Id = "var12", Color = "Red", ColorCode = "#FF0000", Size = "9", Price = 129.99m, Stock = 20 },
+                    new ProductVariant { Id = "var13", Color = "Blue", ColorCode = "#0000FF", Size = "9", Price = 129.99m, Stock = 18 },
+                    new ProductVariant { Id = "var14", Color = "Black", ColorCode = "#000000", Size = "10", Price = 129.99m, Stock = 15 },
+                    new ProductVariant { Id = "var15", Color = "White", ColorCode = "#FFFFFF", Size = "8", Price = 129.99m, Stock = 12 }
+                }
+            },
             new Product { Id = "prod6", Name = "Modern Sofa", Description = "Comfortable modern sofa that elevates any living space.", CategoryId = "cat3", SubCategoryId = "cat3", Price = 899.99m, OriginalPrice = 1099.99m, Stock = 15, IsFeatured = true, Rating = 4.8m, ReviewCount = 45,
                 ImageUrl = "https://images.unsplash.com/photo-1555041469-a586c61ea9bc?w=700&h=700&fit=crop",
-                ImageUrls = new List<string> { "https://images.unsplash.com/photo-1555041469-a586c61ea9bc?w=700&h=700&fit=crop", "https://images.unsplash.com/photo-1567016432779-094069958ea5?w=700&h=700&fit=crop" } },
+                ImageUrls = new List<string> { "https://images.unsplash.com/photo-1555041469-a586c61ea9bc?w=700&h=700&fit=crop", "https://images.unsplash.com/photo-1567016432779-094069958ea5?w=700&h=700&fit=crop" },
+                AvailableColors = new List<ColorOption> { new ColorOption { Name = "Gray", Code = "#808080" }, new ColorOption { Name = "Beige", Code = "#F5F5DC" }, new ColorOption { Name = "Navy", Code = "#000080" } },
+                AvailableSizes = new List<string> { "2-Seater", "3-Seater", "L-Shape" },
+                Variants = new List<ProductVariant>
+                {
+                    new ProductVariant { Id = "var16", Color = "Gray", ColorCode = "#808080", Size = "3-Seater", Price = 899.99m, OriginalPrice = 1099.99m, Stock = 8 },
+                    new ProductVariant { Id = "var17", Color = "Beige", ColorCode = "#F5F5DC", Size = "3-Seater", Price = 899.99m, OriginalPrice = 1099.99m, Stock = 5 },
+                    new ProductVariant { Id = "var18", Color = "Navy", ColorCode = "#000080", Size = "L-Shape", Price = 1299.99m, OriginalPrice = 1499.99m, Stock = 2 }
+                }
+            },
             new Product { Id = "prod7", Name = "Yoga Mat", Description = "Premium non-slip yoga mat for your daily practice.", CategoryId = "cat4", SubCategoryId = "cat4", Price = 49.99m, Stock = 200, Rating = 4.2m, ReviewCount = 300,
                 ImageUrl = "https://images.unsplash.com/photo-1601925260368-ae2f83cf8b7f?w=700&h=700&fit=crop",
-                ImageUrls = new List<string> { "https://images.unsplash.com/photo-1601925260368-ae2f83cf8b7f?w=700&h=700&fit=crop", "https://images.unsplash.com/photo-1518611012118-696072aa579a?w=700&h=700&fit=crop" } },
+                ImageUrls = new List<string> { "https://images.unsplash.com/photo-1601925260368-ae2f83cf8b7f?w=700&h=700&fit=crop", "https://images.unsplash.com/photo-1518611012118-696072aa579a?w=700&h=700&fit=crop" },
+                AvailableColors = new List<ColorOption> { new ColorOption { Name = "Purple", Code = "#800080" }, new ColorOption { Name = "Blue", Code = "#0000FF" }, new ColorOption { Name = "Pink", Code = "#FFC0CB" }, new ColorOption { Name = "Green", Code = "#008000" } },
+                AvailableSizes = new List<string> { "Standard", "Extra Long" },
+                Variants = new List<ProductVariant>
+                {
+                    new ProductVariant { Id = "var19", Color = "Purple", ColorCode = "#800080", Size = "Standard", Price = 49.99m, Stock = 60 },
+                    new ProductVariant { Id = "var20", Color = "Blue", ColorCode = "#0000FF", Size = "Standard", Price = 49.99m, Stock = 55 },
+                    new ProductVariant { Id = "var21", Color = "Pink", ColorCode = "#FFC0CB", Size = "Extra Long", Price = 59.99m, Stock = 40 }
+                }
+            },
             new Product { Id = "prod8", Name = "Bestseller Novel", Description = "Popular fiction novel everyone is talking about.", CategoryId = "cat5", SubCategoryId = "cat5", Price = 19.99m, Stock = 150, IsFeatured = true, Rating = 4.9m, ReviewCount = 500,
                 ImageUrl = "https://images.unsplash.com/photo-1544947950-fa07a98d237f?w=700&h=700&fit=crop",
                 ImageUrls = new List<string> { "https://images.unsplash.com/photo-1544947950-fa07a98d237f?w=700&h=700&fit=crop", "https://images.unsplash.com/photo-1512820790803-83ca734da794?w=700&h=700&fit=crop" } }

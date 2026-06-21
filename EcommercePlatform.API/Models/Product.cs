@@ -18,4 +18,11 @@ public class Product
     public int ReviewCount { get; set; }
     public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
     public DateTime UpdatedAt { get; set; } = DateTime.UtcNow;
+    
+    // Product variants (color/size combinations)
+    public List<ProductVariant> Variants { get; set; } = new();
+    
+    // Available colors and sizes for this product
+    public List<ColorOption> AvailableColors { get; set; } = new();
+    public List<string> AvailableSizes { get; set; } = new();
 }

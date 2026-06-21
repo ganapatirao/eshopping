@@ -87,7 +87,70 @@ public class ProductsController : ControllerBase
         product.Id = id;
         product.CreatedAt = existing.CreatedAt;
         product.UpdatedAt = DateTime.UtcNow;
+        
+        // Update variant timestamps
+        foreach (var variant in product.Variants)
+        {
+            if (string.IsNullOrEmpty(variant.Id))
+            {
+                variant.Id = Guid.NewGuid().ToString();
+                variant.CreatedAt = DateTime.UtcNow;
+            }
+            variant.UpdatedAt = DateTime.UtcNow;
+        }
+        
         await _context.Products.ReplaceOneAsync(p => p.Id == id, product);
+        return NoContent();
+    }
+
+    [HttpPost("{productId}/variants")]
+    public async Task<ActionResult<ProductVariant>> AddVariant(string productId, ProductVariant variant)
+    {
+        var product = await _context.Products.Find(p => p.Id == productId).FirstOrDefaultAsync();
+        if (product == null) return NotFound();
+
+        variant.Id = Guid.NewGuid().ToString();
+        variant.CreatedAt = DateTime.UtcNow;
+        variant.UpdatedAt = DateTime.UtcNow;
+        
+        product.Variants.Add(variant);
+        product.UpdatedAt = DateTime.UtcNow;
+        
+        await _context.Products.ReplaceOneAsync(p => p.Id == productId, product);
+        return Ok(variant);
+    }
+
+    [HttpPut("{productId}/variants/{variantId}")]
+    public async Task<IActionResult> UpdateVariant(string productId, string variantId, ProductVariant variant)
+    {
+        var product = await _context.Products.Find(p => p.Id == productId).FirstOrDefaultAsync();
+        if (product == null) return NotFound();
+
+        var existingVariant = product.Variants.FirstOrDefault(v => v.Id == variantId);
+        if (existingVariant == null) return NotFound();
+
+        variant.Id = variantId;
+        variant.CreatedAt = existingVariant.CreatedAt;
+        variant.UpdatedAt = DateTime.UtcNow;
+        
+        var index = product.Variants.FindIndex(v => v.Id == variantId);
+        product.Variants[index] = variant;
+        product.UpdatedAt = DateTime.UtcNow;
+        
+        await _context.Products.ReplaceOneAsync(p => p.Id == productId, product);
+        return NoContent();
+    }
+
+    [HttpDelete("{productId}/variants/{variantId}")]
+    public async Task<IActionResult> DeleteVariant(string productId, string variantId)
+    {
+        var product = await _context.Products.Find(p => p.Id == productId).FirstOrDefaultAsync();
+        if (product == null) return NotFound();
+
+        product.Variants.RemoveAll(v => v.Id == variantId);
+        product.UpdatedAt = DateTime.UtcNow;
+        
+        await _context.Products.ReplaceOneAsync(p => p.Id == productId, product);
         return NoContent();
     }
 

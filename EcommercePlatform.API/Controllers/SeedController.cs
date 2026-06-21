@@ -31,4 +31,23 @@ public class SeedController : ControllerBase
         await _context.Footers.DeleteManyAsync(FilterDefinition<Models.Footer>.Empty);
         return Ok(new { message = "Footer collection cleaned successfully" });
     }
+
+    [HttpPost("cleanup-products")]
+    public async Task<IActionResult> CleanupProducts()
+    {
+        await _context.Products.DeleteManyAsync(FilterDefinition<Models.Product>.Empty);
+        return Ok(new { message = "Products collection cleaned successfully" });
+    }
+
+    [HttpPost("cleanup-all")]
+    public async Task<IActionResult> CleanupAll()
+    {
+        await _context.Products.DeleteManyAsync(FilterDefinition<Models.Product>.Empty);
+        await _context.Categories.DeleteManyAsync(FilterDefinition<Models.Category>.Empty);
+        await _context.Users.DeleteManyAsync(FilterDefinition<Models.User>.Empty);
+        await _context.Headers.DeleteManyAsync(FilterDefinition<Models.Header>.Empty);
+        await _context.Footers.DeleteManyAsync(FilterDefinition<Models.Footer>.Empty);
+        await _context.Advertisements.DeleteManyAsync(FilterDefinition<Models.Advertisement>.Empty);
+        return Ok(new { message = "All collections cleaned successfully" });
+    }
 }
