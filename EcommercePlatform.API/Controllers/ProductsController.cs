@@ -16,20 +16,44 @@ public class ProductsController : ControllerBase
         _context = context;
     }
 
+    private Product RoundProductPrices(Product product)
+    {
+        product.Price = Math.Round(product.Price);
+        if (product.OriginalPrice.HasValue)
+        {
+            product.OriginalPrice = Math.Round(product.OriginalPrice.Value);
+        }
+        foreach (var variant in product.Variants)
+        {
+            variant.Price = Math.Round(variant.Price);
+            if (variant.OriginalPrice.HasValue)
+            {
+                variant.OriginalPrice = Math.Round(variant.OriginalPrice.Value);
+            }
+        }
+        return product;
+    }
+
     [HttpGet]
-    public async Task<ActionResult<IEnumerable<Product>>> GetProducts([FromQuery] string? categoryId = null)
+    public async Task<ActionResult<IEnumerable<Product>>> GetProducts([FromQuery] string? categoryId = null, [FromQuery] string? subCategoryId = null)
     {
         var filter = Builders<Product>.Filter.Eq(p => p.IsActive, true);
-        
+
         if (!string.IsNullOrEmpty(categoryId))
         {
             filter = filter & Builders<Product>.Filter.Eq(p => p.CategoryId, categoryId);
         }
 
+        if (!string.IsNullOrEmpty(subCategoryId))
+        {
+            filter = filter & Builders<Product>.Filter.Eq(p => p.SubCategoryId, subCategoryId);
+        }
+
         var products = await _context.Products
             .Find(filter)
             .ToListAsync();
-        return Ok(products);
+        var roundedProducts = products.Select(p => RoundProductPrices(p)).ToList();
+        return Ok(roundedProducts);
     }
 
     [HttpGet("{id}")]
@@ -37,7 +61,7 @@ public class ProductsController : ControllerBase
     {
         var product = await _context.Products.Find(p => p.Id == id).FirstOrDefaultAsync();
         if (product == null) return NotFound();
-        return Ok(product);
+        return Ok(RoundProductPrices(product));
     }
 
     [HttpGet("featured")]
@@ -46,7 +70,8 @@ public class ProductsController : ControllerBase
         var products = await _context.Products
             .Find(p => p.IsActive && p.IsFeatured)
             .ToListAsync();
-        return Ok(products);
+        var roundedProducts = products.Select(p => RoundProductPrices(p)).ToList();
+        return Ok(roundedProducts);
     }
 
     [HttpGet("category/{categoryId}")]
@@ -55,7 +80,8 @@ public class ProductsController : ControllerBase
         var products = await _context.Products
             .Find(p => p.IsActive && p.CategoryId == categoryId)
             .ToListAsync();
-        return Ok(products);
+        var roundedProducts = products.Select(p => RoundProductPrices(p)).ToList();
+        return Ok(roundedProducts);
     }
 
     [HttpGet("all")]
@@ -64,7 +90,8 @@ public class ProductsController : ControllerBase
         var products = await _context.Products
             .Find(FilterDefinition<Product>.Empty)
             .ToListAsync();
-        return Ok(products);
+        var roundedProducts = products.Select(p => RoundProductPrices(p)).ToList();
+        return Ok(roundedProducts);
     }
 
     [HttpPost]

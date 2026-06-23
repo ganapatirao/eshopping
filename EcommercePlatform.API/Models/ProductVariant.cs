@@ -8,6 +8,7 @@ public class ProductVariant
     public string Size { get; set; } = string.Empty;
     public decimal Price { get; set; }
     public decimal? OriginalPrice { get; set; }
+    public decimal DiscountPercentage { get; set; } = 0; // Variant-level discount percentage
     public int Stock { get; set; }
     public List<string> ImageUrls { get; set; } = new();
     public bool IsActive { get; set; } = true;

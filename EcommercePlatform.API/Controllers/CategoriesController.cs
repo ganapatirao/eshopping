@@ -84,4 +84,64 @@ public class CategoriesController : ControllerBase
         await _context.Categories.DeleteOneAsync(c => c.Id == id);
         return NoContent();
     }
+
+    // Subcategory endpoints
+    [HttpGet("subcategories")]
+    public async Task<ActionResult<IEnumerable<SubCategory>>> GetSubCategories()
+    {
+        var subCategories = await _context.SubCategories
+            .Find(sc => sc.IsActive)
+            .SortBy(sc => sc.DisplayOrder)
+            .ToListAsync();
+        return Ok(subCategories);
+    }
+
+    [HttpGet("subcategories/{id}")]
+    public async Task<ActionResult<SubCategory>> GetSubCategory(string id)
+    {
+        var subCategory = await _context.SubCategories.Find(sc => sc.Id == id).FirstOrDefaultAsync();
+        if (subCategory == null) return NotFound();
+        return Ok(subCategory);
+    }
+
+    [HttpGet("subcategories/by-category/{categoryId}")]
+    public async Task<ActionResult<IEnumerable<SubCategory>>> GetSubCategoriesByCategory(string categoryId)
+    {
+        var subCategories = await _context.SubCategories
+            .Find(sc => sc.IsActive && sc.ParentCategoryId == categoryId)
+            .SortBy(sc => sc.DisplayOrder)
+            .ToListAsync();
+        return Ok(subCategories);
+    }
+
+    [HttpPost("subcategories")]
+    public async Task<ActionResult<SubCategory>> CreateSubCategory(SubCategory subCategory)
+    {
+        if (string.IsNullOrEmpty(subCategory.Id))
+            subCategory.Id = Guid.NewGuid().ToString();
+        subCategory.CreatedAt = DateTime.UtcNow;
+        subCategory.UpdatedAt = DateTime.UtcNow;
+        await _context.SubCategories.InsertOneAsync(subCategory);
+        return CreatedAtAction(nameof(GetSubCategory), new { id = subCategory.Id }, subCategory);
+    }
+
+    [HttpPut("subcategories/{id}")]
+    public async Task<IActionResult> UpdateSubCategory(string id, SubCategory subCategory)
+    {
+        var existing = await _context.SubCategories.Find(sc => sc.Id == id).FirstOrDefaultAsync();
+        if (existing == null) return NotFound();
+
+        subCategory.Id = id;
+        subCategory.CreatedAt = existing.CreatedAt;
+        subCategory.UpdatedAt = DateTime.UtcNow;
+        await _context.SubCategories.ReplaceOneAsync(sc => sc.Id == id, subCategory);
+        return NoContent();
+    }
+
+    [HttpDelete("subcategories/{id}")]
+    public async Task<IActionResult> DeleteSubCategory(string id)
+    {
+        await _context.SubCategories.DeleteOneAsync(sc => sc.Id == id);
+        return NoContent();
+    }
 }
